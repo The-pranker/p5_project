@@ -36,23 +36,25 @@ function draw() {
         background(0);
         fill(0, 0, 255);
         rect(myX, myY, 50, 50);
+
         for (let i = enemyArray.length - 1; i >= 0; i--) {
             fill(255, 0, 0);
             rect(enemyArray[i].xPos, enemyArray[i].yPos, enemyArray[i].sizeValue / 2, enemyArray[i].sizeValue / 2);
         }
-        if (myX > 25 && myX < 775 && myY > 25 && myY < 775) {
-            if (keyIsDown(UP_ARROW)) {
-                myY -= 3;
-            }
-            if (keyIsDown(DOWN_ARROW)) {
-                myY += 3;
-            }
-            if (keyIsDown(LEFT_ARROW)) {
-                myX -= 3;
-            }
-            if (keyIsDown(RIGHT_ARROW)) {
-                myX += 3;
-            }
+
+        moveEnem();
+        
+        if (keyIsDown(UP_ARROW) && myY > 25) { 
+            myY -= 3; 
+        } 
+        if (keyIsDown(DOWN_ARROW) && myY < height - 25) { 
+            myY += 3; 
+        } 
+        if (keyIsDown(LEFT_ARROW) && myX > 25) { 
+            myX -= 3; 
+        } 
+        if (keyIsDown(RIGHT_ARROW) && myX < width - 25) { 
+            myX += 3; 
         }
     }
 }
@@ -90,6 +92,7 @@ function spawn() {
         tempX = 0;
         tempY = random(height);
     }
+
     if (state == 'easy') {
         temp = new enemy(random(1, 4), random(1,4), tempX, tempY, 50);
     }
@@ -99,8 +102,21 @@ function spawn() {
     else if (state == 'hard') {
         temp = new enemy(random(15, 20), random (15,20), tempX, tempY, random(30, 40));
     }
+
     enemyArray.push(temp);
     
+}
+
+function moveEnem() {
+    for (let i = enemyArray.length - 1; i >= 0; i--) {
+        let xDiff = myX - enemyArray[i].xPos;
+        let yDiff = myY - enemyArray[i].yPos;
+
+        let angle = atan2(yDiff, xDiff);
+
+        enemyArray[i].xPos += cos(angle) * enemyArray[i].speedValue;
+        enemyArray[i].yPos += sin(angle) * enemyArray[i].speedValue;
+    }
 }
 
 class enemy {
