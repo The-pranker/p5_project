@@ -1,7 +1,9 @@
 let state = 'start';
-let myX = 400;
-let myY = 400;
+let playerX = 400;
+let playerY = 400;
+let playerHealth;
 let enemyArray = [];
+let score = 0;
 
 function setup() {
     createCanvas(800,800);
@@ -35,27 +37,21 @@ function draw() {
     else if (state == 'easy' || state == 'medium' || state == 'hard') { 
         background(0);
         fill(0, 0, 255);
-        rect(myX, myY, 50, 50);
+        rect(playerX, playerY, 50, 50);
+        fill(255);
+        text("Score: " + score, 80, 50);
+        text("Health: " + playerHealth, 700, 50);
 
         for (let i = enemyArray.length - 1; i >= 0; i--) {
             fill(255, 0, 0);
             rect(enemyArray[i].xPos, enemyArray[i].yPos, enemyArray[i].sizeValue / 2, enemyArray[i].sizeValue / 2);
         }
 
-        moveEnem();
-        
-        if (keyIsDown(UP_ARROW) && myY > 25) { 
-            myY -= 3; 
-        } 
-        if (keyIsDown(DOWN_ARROW) && myY < height - 25) { 
-            myY += 3; 
-        } 
-        if (keyIsDown(LEFT_ARROW) && myX > 25) { 
-            myX -= 3; 
-        } 
-        if (keyIsDown(RIGHT_ARROW) && myX < width - 25) { 
-            myX += 3; 
-        }
+        moveEnemy();
+        movePlayer();
+        checkCollision();
+
+
     }
 }
     
@@ -64,12 +60,15 @@ function mouseClicked() {
         if (mouseX > 200 && mouseX < 600) {
             if (mouseY > 250 && mouseY < 350) {
                 state = 'easy';
+                playerHealth = 100;
             }
             else if (mouseY > 400 && mouseY < 500) {
                 state = 'medium';
+                playerHealth = 80;
             }
             else if (mouseY > 550 && mouseY < 650) {
                 state = 'hard';
+                playerHealth = 50;
             }
         }
     }
@@ -107,15 +106,40 @@ function spawn() {
     
 }
 
-function moveEnem() {
+function moveEnemy() {
     for (let i = enemyArray.length - 1; i >= 0; i--) {
-        let xDiff = myX - enemyArray[i].xPos;
-        let yDiff = myY - enemyArray[i].yPos;
+        let xDiff = playerX - enemyArray[i].xPos;
+        let yDiff = playerY - enemyArray[i].yPos;
 
         let angle = atan2(yDiff, xDiff);
 
         enemyArray[i].xPos += cos(angle) * enemyArray[i].speedValue;
         enemyArray[i].yPos += sin(angle) * enemyArray[i].speedValue;
+    }
+}
+
+function movePlayer() {
+     if (keyIsDown(UP_ARROW) && playerY > 25) { 
+            playerY -= 3; 
+        } 
+        if (keyIsDown(DOWN_ARROW) && playerY < height - 25) { 
+            playerY += 3; 
+        } 
+        if (keyIsDown(LEFT_ARROW) && playerX > 25) { 
+            playerX -= 3; 
+        } 
+        if (keyIsDown(RIGHT_ARROW) && playerX < width - 25) { 
+            playerX += 3; 
+        }
+}
+
+function checkCollision() {
+    for (let i = enemyArray.length - 1; i >= 0; i--) {
+        if (dist(playerX, playerY, enemyArray[i].xPos, enemyArray[i].yPos) < 25) {
+            playerHealth -= enemyArray[i].damageValue;
+            enemyArray.splice(i, 1);
+
+        }
     }
 }
 
