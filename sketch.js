@@ -4,6 +4,10 @@ let playerY = 400;
 let playerHealth;
 let enemyArray = [];
 let score = 0;
+let highScore = 0;
+let bulletSpeed = 10;
+let bulletDamage = 10;
+let bulletArray = [];
 
 function setup() {
     createCanvas(800,800);
@@ -11,7 +15,7 @@ function setup() {
     rectMode(CENTER);
     textAlign(CENTER);
 
-    setInterval(spawn, 1500);
+    setInterval(spawnEnemy, 1500);
 }
 
 function draw() {
@@ -32,8 +36,16 @@ function draw() {
         fill(0);
         text("Hard", 400, 610);
     }
-    else if (state == 'end') {}
-
+    else if (state == 'end') {
+        background(0);
+        fill(255);
+        text("Final Score: " + score, 400, 200);
+        text("High Score: " + highScore, 400, 300);
+        fill('#22ff00');
+        rect(400, 450, 400, 100);
+        fill(0);
+        text("Play Again", 400, 460);
+    }
     else if (state == 'easy' || state == 'medium' || state == 'hard') { 
         background(0);
         fill(0, 0, 255);
@@ -42,13 +54,26 @@ function draw() {
         text("Score: " + score, 80, 50);
         text("Health: " + playerHealth, 700, 50);
 
+        if (playerHealth <= 0) {
+            state = 'end';
+            if (score > highScore) {
+                highScore = score;
+            }
+        }
+
         for (let i = enemyArray.length - 1; i >= 0; i--) {
             fill(255, 0, 0);
-            rect(enemyArray[i].xPos, enemyArray[i].yPos, enemyArray[i].sizeValue / 2, enemyArray[i].sizeValue / 2);
+            rect(enemyArray[i].xPos, enemyArray[i].yPos, enemyArray[i].sizeValue, enemyArray[i].sizeValue);
+        }
+
+        for (let i = bulletArray.length - 1; i >= 0; i--) {
+            fill(255, 255, 143);
+            ellipse(bulletArray[i].xPos, bulletArray[i].yPos, bulletArray[i].sizeValue, bulletArray[i].sizeValue);
         }
 
         moveEnemy();
         movePlayer();
+        moveBullet();
         checkCollision();
 
 
@@ -72,9 +97,17 @@ function mouseClicked() {
             }
         }
     }
+    else if (state == 'easy' || state == 'medium' || state == 'hard') {
+        spawnBullet();
+    }
+    else if (state == 'end') {
+        if (mouseX > 200 && mouseX < 600 && mouseY > 350 && mouseY < 550) {
+            state == 'start';
+        }
+    }
 }
 
-function spawn() {
+function spawnEnemy() {
     let edge = int(random(4));
     let tempX, tempY, temp;
 
@@ -93,17 +126,26 @@ function spawn() {
     }
 
     if (state == 'easy') {
-        temp = new enemy(random(1, 4), random(1,4), tempX, tempY, 50);
+        temp = new enemy(int(random(1, 4)), int(random(1,4)), tempX, tempY, 50, int(random(1, 5)));
     }
     else if (state == 'medium') {
-        temp = new enemy(random(4, 10), random(4, 10), tempX, tempY, random(40, 50));
+        temp = new enemy(int(random(4, 10)), int(random(4, 10)), tempX, tempY, int(random(40, 50)), int(random(5, 10)));
     }
     else if (state == 'hard') {
-        temp = new enemy(random(15, 20), random (15,20), tempX, tempY, random(30, 40));
+        temp = new enemy(int(random(15, 20)), int(random(15,20)), tempX, tempY, int(random(30, 40)), int(random(10, 25)));
     }
 
     enemyArray.push(temp);
+
+}
+
+function spawnBullet() {
+    let xDiff = mouseX - playerX;
+    let yDiff = mouseY - playerY;
+    let angle = atan2(yDiff, xDiff);
     
+    let temp = new bullet(bulletSpeed, bulletDamage, playerX, playerY, 10, angle); 
+    bulletArray.push(temp);
 }
 
 function moveEnemy() {
@@ -133,54 +175,57 @@ function movePlayer() {
         }
 }
 
+function moveBullet() {
+    for (let i = bulletArray.length - 1; i >= 0; i--) {
+        bulletArray[i].xPos += cos(bulletArray[i].targetAngle) * bulletArray[i].speedValue; 
+        bulletArray[i].yPos += sin(bulletArray[i].targetAngle) * bulletArray[i].speedValue; 
+        
+
+        if (bulletArray[i].xPos < 0 || bulletArray[i].xPos > width || bulletArray[i].yPos < 0 || bulletArray[i].yPos > height) {
+            bulletArray.splice(i, 1);
+        }
+    }
+}
 function checkCollision() {
     for (let i = enemyArray.length - 1; i >= 0; i--) {
         if (dist(playerX, playerY, enemyArray[i].xPos, enemyArray[i].yPos) < 25) {
             playerHealth -= enemyArray[i].damageValue;
             enemyArray.splice(i, 1);
-
+        }
+        for (let j = bulletArray.length - 1; j >= 0; j--) {
+            if (dist(bulletArray[j].xPos, bulletArray[j].yPos, enemyArray[i].xPos, enemyArray[i].yPos) < enemyArray[i].sizeValue / 2) {
+                if (bulletArray[j].damageValue >= enemyArray[i].healthValue) {
+                    enemyArray.splice(i, 1);
+                    bulletArray.splice(j, 1);
+                    score += 1;
+                }
+                else if (bulletArray[j].damageValue < enemyArray[i].healthValue) {
+                    enemyArray[i].healthValue -= bulletArray[j].damageValue;
+                    bulletArray.splice(j, 1);
+                }
+            }
         }
     }
 }
 
 class enemy {
-    constructor(speed, damage, x, y, size) {
+    constructor(speed, damage, x, y, size, health) {
         this.speedValue = speed;
         this.damageValue = damage;
         this.xPos = x;
         this.yPos = y;
         this.sizeValue = size;
+        this.healthValue = health;
     }
 }
 
-    //Scoreboard making
-    /*
-
-    let Splayer1 = 0;
-    let Splayer2 = 0;
-    let isCatch = true;
-    let player1Caught = isCatch;
-    let player2Caught = isCatch;
-
-   if(player1Caught && !player2Caught)
-   {
-    Splayer1 += 5;
-   }
-   else if(player2Caught && !player1Caught)
-   {
-    Splayer2 += 5;
-   }
-   else if(player1Caught && player2Caught)
-   {
-    Splayer1 += 5;
-    SPlayer2 += 5;
-   }
-   else{
-    console.log("Keep trying to catch the ball.");
-   }
-
-   
-    
-    
-    */
-  
+class bullet {
+    constructor(speed, damage, x, y, size, angle) {
+        this.speedValue = speed;
+        this.damageValue = damage;
+        this.xPos = x;
+        this.yPos = y;
+        this.sizeValue = size;
+        this.targetAngle = angle;
+    }
+}
