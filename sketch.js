@@ -109,6 +109,9 @@ function mouseClicked() {
 }
 
 function spawnEnemy() {
+    if (state !== 'easy' && state !== 'medium' && state !== 'hard') {
+        return;
+    }
     let edge = int(random(4));
     let tempX, tempY, temp;
 
@@ -207,7 +210,7 @@ function checkCollision() {
                     else if (state == 'hard') {
                         score += 5;
                     }
-                    
+                    break;
                 }
                 else if (bulletArray[j].damageValue < enemyArray[i].healthValue) {
                     enemyArray[i].healthValue -= bulletArray[j].damageValue;
