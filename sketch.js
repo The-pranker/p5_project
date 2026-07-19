@@ -20,6 +20,7 @@ function setup() {
 
 function draw() {
     if (state == 'start') {
+        background(0);
         fill(255);
         textSize(32);
         text("Name here", 400, 200);
@@ -102,7 +103,7 @@ function mouseClicked() {
     }
     else if (state == 'end') {
         if (mouseX > 200 && mouseX < 600 && mouseY > 350 && mouseY < 550) {
-            state == 'start';
+            state = 'start';
         }
     }
 }
@@ -197,7 +198,16 @@ function checkCollision() {
                 if (bulletArray[j].damageValue >= enemyArray[i].healthValue) {
                     enemyArray.splice(i, 1);
                     bulletArray.splice(j, 1);
-                    score += 1;
+                    if (state == 'easy') {
+                        score += 1;
+                    }
+                    else if (state == 'medium') {
+                        score += 3;
+                    }
+                    else if (state == 'hard') {
+                        score += 5;
+                    }
+                    
                 }
                 else if (bulletArray[j].damageValue < enemyArray[i].healthValue) {
                     enemyArray[i].healthValue -= bulletArray[j].damageValue;
